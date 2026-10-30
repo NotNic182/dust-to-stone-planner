@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dust to Stone Planner</title>
+<meta name="description" content="Unofficial Moon Sweepers fan tool: sketch pressure chamber and stone press lines, then run a test to see where belts back up and where splitters and mergers go.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dust to Stone Planner">
+<meta property="og:description" content="Unofficial Moon Sweepers fan tool: sketch pressure chamber and stone press lines, then run a test to see where belts back up and where splitters and mergers go.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='1' width='14' height='14' rx='3' fill='%23dd6a28'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Saira+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: a control-room console. Toolbar across the top, the factory floor as a grid on the left, readouts on the right. */
+:root {
+  --bg: #e8ebef;
+  --panel: #f6f7f9;
+  --ink: #1a1f28;
+  --muted: #586172;
+  --line: #cdd3dc;
+  --accent: #2a52c4;
+  --accent-ink: #ffffff;
+  --floor: #dfe3e9;
+  --floor-line: #ced4dc;
+  --belt: #39414f;
+  --belt-mark: #7f8a9c;
+  --dust: #b08d5e;
+  --sand: #e3b934;
+  --stone: #a9b5c8;
+  --item-edge: rgba(15, 18, 24, 0.55);
+  --c-source: #3a78de;
+  --c-chamber: #8657d4;
+  --c-press: #dd6a28;
+  --c-splitter: #149e8f;
+  --c-merger: #cf4589;
+  --c-bridge: #737c8c;
+  --c-collector: #2e9a55;
+  --ok: #2b9a52;
+  --warn: #d08c12;
+  --bad: #d23f30;
+  --idle: #8a93a2;
+  --font-display: "Saira Semi Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101318; --panel: #171b22; --ink: #e4e7ed; --muted: #98a1b1; --line: #2a303b;
+    --accent: #84a0ff; --accent-ink: #0c1121; --floor: #1a1f27; --floor-line: #232934;
+    --belt: #48515f; --belt-mark: #a0aabb; --dust: #c19d6c; --sand: #f0c845; --stone: #b6c2d4;
+    --item-edge: rgba(0, 0, 0, 0.6);
+    --c-source: #4f8cf0; --c-chamber: #9a6ee6; --c-press: #ec7c3a; --c-splitter: #22b4a3;
+    --c-merger: #e05a9c; --c-bridge: #858e9e; --c-collector: #3bb067;
+    --ok: #3cb767; --warn: #e8a52a; --bad: #ec5a4a; --idle: #6f7888;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101318; --panel: #171b22; --ink: #e4e7ed; --muted: #98a1b1; --line: #2a303b;
+  --accent: #84a0ff; --accent-ink: #0c1121; --floor: #1a1f27; --floor-line: #232934;
+  --belt: #48515f; --belt-mark: #a0aabb; --dust: #c19d6c; --sand: #f0c845; --stone: #b6c2d4;
+  --item-edge: rgba(0, 0, 0, 0.6);
+  --c-source: #4f8cf0; --c-chamber: #9a6ee6; --c-press: #ec7c3a; --c-splitter: #22b4a3;
+  --c-merger: #e05a9c; --c-bridge: #858e9e; --c-collector: #3bb067;
+  --ok: #3cb767; --warn: #e8a52a; --bad: #ec5a4a; --idle: #6f7888;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 28px;
+}
+.page { max-width: 1440px; margin: 0 auto; display: grid; gap: 14px; }
+
+.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.head h1 {
+  font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: 0.01em;
+  margin: 0; text-wrap: balance; line-height: 1.1;
+}
+.head h1 .flow { color: var(--muted); font-weight: 500; }
+.head p { margin: 0; color: var(--muted); max-width: 70ch; }
+.head-text { display: grid; gap: 4px; }
+.head p.fan { font-size: 12.5px; }
+
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.group-label {
+  font-family: var(--font-display); font-weight: 600; font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); margin-right: 2px;
+}
+button {
+  font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line);
+  border-radius: 7px; padding: 5px 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  min-height: 32px; white-space: nowrap;
+}
+button:hover { border-color: var(--muted); }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; padding-inline: 14px; }
+button.primary:hover { filter: brightness(1.08); }
+.swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.key { font-family: var(--font-mono); font-size: 11px; opacity: 0.6; }
+button[aria-pressed="true"] .key { opacity: 0.75; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; min-height: 30px; padding: 4px 9px; font-family: var(--font-mono); font-size: 12px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.rot-glyph { font-family: var(--font-mono); font-size: 15px; line-height: 1; display: inline-block; width: 14px; text-align: center; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
+@media (max-width: 960px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.board { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 0; }
+.board-scroll { overflow: auto; max-height: 76vh; }
+canvas { display: block; touch-action: none; }
+canvas.pan { touch-action: pan-x pan-y; }
+.board-foot {
+  display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between;
+  padding: 8px 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px;
+}
+.board-foot b { color: var(--ink); font-weight: 600; }
+
+.panel { display: grid; gap: 12px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.card h2 {
+  font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 8px;
+}
+.readouts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.ro { display: grid; gap: 1px; }
+.ro-label { font-size: 12px; color: var(--muted); }
+.ro-val { font-family: var(--font-mono); font-size: 20px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.ro-val small { font-size: 11.5px; color: var(--muted); margin-left: 3px; }
+.ro-val.big { font-size: 26px; }
+
+.ratio { font-family: var(--font-display); font-size: 19px; font-weight: 600; margin: 0 0 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pill {
+  font-family: var(--font-body); font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid currentColor; letter-spacing: 0.02em;
+}
+.pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+.facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.facts li { display: flex; justify-content: space-between; gap: 10px; }
+.facts li span:last-child { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.advice { margin: 8px 0 0; font-size: 13px; padding: 8px 10px; border-radius: 7px; background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.limit { margin: 8px 0 0; font-size: 13px; }
+
+.warnlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.warnlist button { width: 100%; justify-content: flex-start; white-space: normal; text-align: left; font-size: 12.5px; border-color: transparent; padding: 4px 6px; min-height: 0; }
+.warnlist button:hover { border-color: var(--line); }
+.warnlist .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; margin-top: 5px; align-self: flex-start; }
+.warnlist .dot.bad { background: var(--bad); }
+.empty { color: var(--muted); font-size: 13px; margin: 0; }
+
+.insp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.insp-head strong { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+.status { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.st-run { color: var(--ok); } .st-wait { color: var(--warn); } .st-bad { color: var(--bad); } .st-idle { color: var(--idle); }
+.bars { display: grid; gap: 6px; margin-top: 6px; }
+.bar { display: grid; grid-template-columns: 84px 1fr 64px; align-items: center; gap: 8px; font-size: 12.5px; }
+.bar .track { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.bar .fill { height: 100%; border-radius: 4px; }
+.bar .num { font-family: var(--font-mono); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.insp-note { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+.rate-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-top: 6px; }
+.rate-row input { width: 100%; accent-color: var(--accent); }
+.rate-row output { font-family: var(--font-mono); font-size: 13px; min-width: 64px; text-align: right; }
+
+.legend { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 12px; font-size: 12.5px; }
+.legend div { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.legend .ring { width: 12px; height: 12px; border-radius: 3px; border: 2.5px solid; flex: none; }
+.legend .can { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--item-edge); }
+details { font-size: 13px; }
+details summary { cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+details ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 5px; }
+details p { margin: 8px 0 0; color: var(--muted); }
+dialog {
+  border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink);
+  padding: 0; width: min(560px, calc(100vw - 32px));
+}
+dialog::backdrop { background: rgba(10, 12, 16, 0.45); }
+.dlg { display: grid; gap: 8px; padding: 14px 18px 18px; }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dlg h2 {
+  font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); margin: 6px 0 0;
+}
+.dlg-head h2 { margin: 0; }
+.dlg p { margin: 0; font-size: 13px; color: var(--muted); }
+.dlg textarea {
+  width: 100%; font-family: var(--font-mono); font-size: 12px; line-height: 1.4; background: var(--bg); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 7px; padding: 8px; resize: vertical; word-break: break-all;
+}
+.dlg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dlg-msg { font-size: 12.5px; color: var(--muted); }
+.dlg-msg.bad { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <h1>Dust to Stone Planner <span class="flow">· chambers, presses &amp; belts</span></h1>
+    <div class="head-text">
+      <p>Sketch a Moon Sweepers production line, then press <b>Run test</b> to watch dust turn into sand and stone. Machine speeds, storage and belt limits come from the game's code.</p>
+      <p class="fan">Unofficial fan-made tool, not made by or connected to the game's developers. Numbers were read from game patch 1.0.5 and haven't been timed in play.</p>
+    </div>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Build tools and test controls">
+    <div class="group" id="tools" aria-label="Tools">
+      <span class="group-label">Build</span>
+    </div>
+    <div class="group">
+      <span class="group-label">Facing</span>
+      <button id="rotBtn" type="button" title="Rotate (R)"><span class="rot-glyph" id="rotGlyph">→</span> Rotate <span class="key">R</span></button>
+    </div>
+    <div class="group">
+      <span class="group-label">Test</span>
+      <button id="runBtn" class="primary" type="button" title="Run or pause (Space)">▶ Run test</button>
+      <button id="resetBtn" type="button" title="Empty the belts and machines, keep the layout">Reset</button>
+      <div class="seg" role="group" aria-label="Speed" id="speedSeg"></div>
+    </div>
+    <div class="group">
+      <span class="group-label">Layout</span>
+      <button id="preset25" type="button">2:5 block</button>
+      <button id="preset11" type="button">1:1 (backs up)</button>
+      <button id="shareBtn" type="button" title="Get a code for this layout, or load someone else's">Share / load code</button>
+      <button id="clearBtn" type="button">Clear</button>
+      <div class="seg" role="group" aria-label="Zoom">
+        <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+        <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="layout">
+    <section class="board" aria-label="Factory floor">
+      <div class="board-scroll" id="boardScroll"><canvas id="cv" aria-label="Factory floor grid. Use the tools to place pieces."></canvas></div>
+      <div class="board-foot">
+        <span id="hint">Drag with <b>Belt</b> to draw. Click a piece again to turn it. Right-click or <b>Erase</b> removes.</span>
+        <span>One square = 1 m of belt · belts max <b>88</b> canisters/min</span>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="card">
+        <h2>Test readout</h2>
+        <div class="readouts" id="readouts"></div>
+      </div>
+      <div class="card">
+        <h2>Balance check</h2>
+        <div id="balance"></div>
+      </div>
+      <div class="card">
+        <h2>Selected</h2>
+        <div id="inspector"></div>
+      </div>
+      <div class="card">
+        <h2>Layout problems</h2>
+        <div id="warnings"></div>
+      </div>
+      <div class="card">
+        <h2>Key</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="card">
+        <details>
+          <summary>How the test works</summary>
+          <ul>
+            <li><b>Pressure chamber:</b> takes 5 kg of dust, runs 12 s, makes 5 kg of sand. Holds 20 kg dust and 10 kg sand. With under 5 kg it waits until no dust has arrived for 3 s, then runs a smaller batch that still takes 12 s.</li>
+            <li><b>Stone press:</b> takes 1 kg dust + 1 kg sand, runs 6 s, makes one 2 kg stone. Holds 12 kg of each input and 10 kg of stone.</li>
+            <li><b>Belts:</b> move 1.1 m/s with canisters at least 0.75 m apart, so 88 canisters a minute at most. Dust and sand canisters are 1 kg, stone is 2 kg.</li>
+            <li><b>Splitter:</b> takes turns between its exits and skips any exit that's backed up.</li>
+            <li><b>Merger:</b> lets whichever canister has waited longest go first.</li>
+            <li><b>Bridge:</b> lets one belt pass over another.</li>
+            <li><b>Machines</b> take input from any side except their output side, and refuse a canister when that store is full. The canister then waits and the belt behind it stops.</li>
+          </ul>
+          <p>Not modelled: power and night-time, vehicles, and each machine's exact port positions. The splitter's exact turn order in the game isn't confirmed.</p>
+        </details>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<dialog id="shareDlg" aria-labelledby="shareTitle">
+  <form method="dialog" class="dlg">
+    <div class="dlg-head"><h2 id="shareTitle">Share this layout</h2><button value="close" aria-label="Close">✕</button></div>
+    <p>Copy this code and paste it into a post or comment. Anyone can load it with the box below.</p>
+    <textarea id="shareCode" readonly rows="4" spellcheck="false" aria-label="Code for this layout"></textarea>
+    <div class="dlg-row">
+      <button type="button" id="copyCode" class="primary">Copy code</button>
+      <button type="button" id="copyLink" hidden>Copy link to this layout</button>
+      <span id="copyMsg" class="dlg-msg" role="status"></span>
+    </div>
+    <h2>Load a layout</h2>
+    <p>Paste a code someone shared. It replaces what's on the floor now.</p>
+    <textarea id="loadCode" rows="4" spellcheck="false" placeholder="DTS1-…" aria-label="Layout code to load"></textarea>
+    <div class="dlg-row">
+      <button type="button" id="loadBtn" class="primary">Load layout</button>
+      <span id="loadMsg" class="dlg-msg" role="status"></span>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- constants from the game's code ----------
+const COLS = 31, ROWS = 19;
+const SPACING = 0.75, SPEED = 1.1, DT = 0.05;
+const BELT_MAX = Math.round(60 * SPEED / SPACING); // 88 per minute
+const ENTRY = SPEED * DT;
+const TAU = 20; // seconds, smoothing for busy % readouts
+const CH = { cycle: 12, batch: 5, dustCap: 20, sandCap: 10, partWait: 3 };
+const PR = { cycle: 6, dustCap: 12, sandCap: 12, stoneCap: 10, stoneKg: 2 };
+const EMIT = 0.35;
+const E = 0, S = 1, W = 2, N = 3;
+const DX = [1, 0, -1, 0], DY = [0, 1, 0, -1];
+const ARROW = ['→', '↓', '←', '↑'];
+const SIDE = ['east', 'south', 'west', 'north'];
+const opp = d => (d + 2) & 3, leftOf = d => (d + 3) & 3, rightOf = d => (d + 1) & 3;
+
+const TOOLS = [
+  { id: 'select', name: 'Select', key: 'V' },
+  { id: 'belt', name: 'Belt', key: 'B', color: '--belt' },
+  { id: 'splitter', name: 'Splitter', key: 'S', color: '--c-splitter' },
+  { id: 'merger', name: 'Merger', key: 'M', color: '--c-merger' },
+  { id: 'bridge', name: 'Bridge', key: 'X', color: '--c-bridge' },
+  { id: 'source', name: 'Dust source', key: 'D', color: '--c-source' },
+  { id: 'chamber', name: 'Pressure chamber', key: 'C', color: '--c-chamber' },
+  { id: 'press', name: 'Stone press', key: 'P', color: '--c-press' },
+  { id: 'collector', name: 'Collector', key: 'L', color: '--c-collector' },
+  { id: 'erase', name: 'Erase', key: 'E' },
+];
+const NAMES = { belt: 'Belt', splitter: 'Splitter', merger: 'Merger', bridge: 'Bridge', source: 'Dust source', chamber: 'Pressure chamber', press: 'Stone press', collector: 'Collector' };
+const LIST = { belt: 'belts', splitter: 'splitters', merger: 'mergers', bridge: 'bridges', source: 'sources', chamber: 'chambers', press: 'presses', collector: 'collectors' };
+
+// ---------- state ----------
+let grid = new Array(COLS * ROWS).fill(null);
+let L = { belts: [], splitters: [], mergers: [], bridges: [], sources: [], chambers: [], presses: [], collectors: [] };
+let warnings = [];
+let simT = 0, running = false, speed = 5;
+let tool = 'belt', rot = E, selected = null, hover = null;
+let TS = 26, fitted = false;
+
+const at = (x, y) => (x < 0 || y < 0 || x >= COLS || y >= ROWS) ? null : grid[y * COLS + x];
+const nb = (t, d) => at(t.x + DX[d], t.y + DY[d]);
+const cell = (t) => `column ${t.x + 1}, row ${t.y + 1}`;
+
+function resetState(t) {
+  switch (t.type) {
+    case 'belt': t.items = []; break;
+    case 'splitter': t.buf = null; t.turn = 0; t.sent = [0, 0, 0]; break;
+    case 'merger': t.buf = null; break;
+    case 'bridge': t.lane = [null, null]; break;
+    case 'source': if (t.rate == null) t.rate = BELT_MAX; t.acc = 0; t.stall = 0; t.blocked = false; t.events = []; t.emitted = 0; break;
+    case 'chamber': Object.assign(t, { dust: 0, batch: 0, sand: 0, running: false, prog: 0, lastInput: -1e9, nextEmit: 0, util: 0, status: 'idle', made: 0, events: [] }); break;
+    case 'press': Object.assign(t, { dust: 0, sand: 0, stone: 0, running: false, prog: 0, nextEmit: 0, util: 0, status: 'idle', made: 0, events: [] }); break;
+    case 'collector': t.got = { dust: 0, sand: 0, stone: 0 }; t.events = []; break;
+  }
+}
+function place(type, x, y, dir, extra) {
+  const t = { type, x, y, dir };
+  if (extra && extra.rate != null) t.rate = extra.rate;
+  resetState(t);
+  grid[y * COLS + x] = t;
+  return t;
+}
+function erase(x, y) {
+  const t = at(x, y); if (!t) return;
+  grid[y * COLS + x] = null;
+  if (selected === t) selected = null;
+}
+
+// ---------- connections ----------
+function pushesTo(src, d, depth = 0) {
+  if (!src) return false;
+  switch (src.type) {
+    case 'belt': case 'source': case 'chamber': case 'press': case 'merger': return src.dir === d;
+    case 'splitter': return d === src.dir || d === leftOf(src.dir) || d === rightOf(src.dir);
+    case 'bridge': return depth < 8 && pushesTo(nb(src, opp(d)), d, depth + 1);
+    default: return false;
+  }
+}
+function acceptsFrom(t, from) {
+  if (!t) return false;
+  switch (t.type) {
+    case 'belt': return t.inSide === from;
+    case 'splitter': return from === opp(t.dir);
+    case 'merger': return from !== t.dir;
+    case 'bridge': return true;
+    case 'chamber': case 'press': return from !== t.dir;
+    case 'collector': return true;
+    default: return false;
+  }
+}
+function analyze() {
+  L = { belts: [], splitters: [], mergers: [], bridges: [], sources: [], chambers: [], presses: [], collectors: [] };
+  for (const t of grid) if (t) L[LIST[t.type]].push(t);
+  for (const b of L.belts) {
+    b.inSide = -1; b.conflict = false;
+    const back = opp(b.dir);
+    const backFeeds = pushesTo(nb(b, back), b.dir);
+    const sides = [leftOf(b.dir), rightOf(b.dir)].filter(s => pushesTo(nb(b, s), opp(s)));
+    if (backFeeds) b.inSide = back; else if (sides.length) b.inSide = sides[0];
+    if ((backFeeds ? 1 : 0) + sides.length > 1) b.conflict = true;
+  }
+  for (const s of L.splitters) {
+    s.outs = [s.dir, leftOf(s.dir), rightOf(s.dir)].filter(d => acceptsFrom(nb(s, d), opp(d)));
+    if (s.sent.length !== s.outs.length) s.sent = s.outs.map(() => 0);
+    if (s.turn >= s.outs.length) s.turn = 0;
+  }
+  warnings = [];
+  const feedsInto = (t) => [0, 1, 2, 3].some(s => pushesTo(nb(t, s), opp(s)));
+  for (const b of L.belts) {
+    if (b.conflict) warnings.push({ t: b, sev: 'bad', text: `Two belts join at ${cell(b)}. Put a Merger there.` });
+    const f = nb(b, b.dir);
+    if (!f) warnings.push({ t: b, sev: 'warn', text: `Belt at ${cell(b)} runs into nothing.` });
+    else if (!acceptsFrom(f, opp(b.dir))) warnings.push({ t: b, sev: 'bad', text: `Belt at ${cell(b)} can't feed the ${NAMES[f.type].toLowerCase()} from that side.` });
+    b.deadEnd = !f || !acceptsFrom(f, opp(b.dir));
+  }
+  for (const m of [...L.sources, ...L.chambers, ...L.presses, ...L.mergers]) {
+    const f = nb(m, m.dir);
+    m.deadEnd = !acceptsFrom(f, opp(m.dir));
+    if (m.deadEnd) warnings.push({ t: m, sev: 'bad', text: `${NAMES[m.type]} at ${cell(m)} has nothing taking its output (${SIDE[m.dir]} side).` });
+  }
+  for (const m of [...L.chambers, ...L.presses]) {
+    if (!feedsInto(m)) warnings.push({ t: m, sev: 'warn', text: `${NAMES[m.type]} at ${cell(m)} has no input belt.` });
+  }
+  for (const s of L.splitters) {
+    if (s.outs.length === 0) warnings.push({ t: s, sev: 'bad', text: `Splitter at ${cell(s)} has no exits.` });
+    else if (s.outs.length === 1) warnings.push({ t: s, sev: 'warn', text: `Splitter at ${cell(s)} only has one exit, so it doesn't split anything.` });
+  }
+  saveLayout();
+  dirtyPanels = true;
+}
+
+// ---------- simulation ----------
+function offer(t, item, d) {
+  if (!t) return false;
+  const from = opp(d);
+  switch (t.type) {
+    case 'belt': {
+      if (t.inSide !== from) return false;
+      const its = t.items;
+      let p = item.p0 || 0;
+      if (its.length) { const room = its[its.length - 1].p - SPACING; if (room < 0) return false; p = Math.min(p, room); }
+      its.push({ c: item.c, kg: item.kg, p, ws: null });
+      return true;
+    }
+    case 'splitter':
+      if (from !== opp(t.dir) || t.buf) return false;
+      t.buf = { c: item.c, kg: item.kg }; return true;
+    case 'merger': {
+      if (from === t.dir || t.buf) return false;
+      const mine = item.ws == null ? simT : item.ws;
+      for (const s of [opp(t.dir), leftOf(t.dir), rightOf(t.dir)]) {
+        if (s === from) continue;
+        const n = nb(t, s);
+        if (n && n.type === 'belt' && n.dir === opp(s) && n.items.length) {
+          const lead = n.items[0];
+          if (lead.p >= 1 - 1e-6 && lead.ws != null && lead.ws < mine) return false;
+        }
+      }
+      t.buf = { c: item.c, kg: item.kg }; return true;
+    }
+    case 'bridge': {
+      const ax = from & 1;
+      if (t.lane[ax]) return false;
+      t.lane[ax] = { c: item.c, kg: item.kg, out: d }; return true;
+    }
+    case 'chamber':
+      if (from === t.dir || item.c !== 'dust' || t.dust + item.kg > CH.dustCap + 1e-9) return false;
+      t.dust += item.kg; t.lastInput = simT; return true;
+    case 'press':
+      if (from === t.dir) return false;
+      if (item.c === 'dust' && t.dust + 1 <= PR.dustCap + 1e-9) { t.dust += 1; return true; }
+      if (item.c === 'sand' && t.sand + 1 <= PR.sandCap + 1e-9) { t.sand += 1; return true; }
+      return false;
+    case 'collector':
+      t.got[item.c] += item.kg; t.events.push([simT, item.c, item.kg]); return true;
+  }
+  return false;
+}
+function stepBelt(b, dt) {
+  const its = b.items; if (!its.length) return;
+  const tgt = nb(b, b.dir);
+  const tgtBelt = tgt && tgt.type === 'belt' && tgt.inSide === opp(b.dir) ? tgt : null;
+  let ahead = Infinity;
+  if (tgtBelt && tgtBelt.items.length) ahead = 1 + tgtBelt.items[tgtBelt.items.length - 1].p;
+  let i = 0;
+  while (i < its.length) {
+    const it = its[i];
+    let np = Math.min(it.p + SPEED * dt, ahead - SPACING);
+    if (i === 0 && np >= 1) {
+      if (it.ws == null) it.ws = simT;
+      it.p0 = np - 1;
+      if (offer(tgt, it, b.dir)) {
+        its.shift();
+        ahead = tgtBelt ? 1 + tgtBelt.items[tgtBelt.items.length - 1].p : Infinity;
+        continue;
+      }
+      np = 1;
+    }
+    if (np > it.p) it.p = np;
+    ahead = it.p;
+    i++;
+  }
+}
+function stepSource(s, dt) {
+  const interval = 60 / Math.max(1, s.rate);
+  s.acc += dt;
+  if (s.acc >= interval) {
+    if (offer(nb(s, s.dir), { c: 'dust', kg: 1, p0: ENTRY, ws: simT }, s.dir)) {
+      s.acc = Math.min(s.acc - interval, interval); s.emitted++; s.events.push([simT, 'dust', 1]); s.blocked = false;
+    } else { s.acc = interval; s.blocked = true; }
+  }
+  s.stall += ((s.blocked ? 1 : 0) - s.stall) * Math.min(1, dt / TAU);
+}
+function chamberTryStart(m) {
+  const room = CH.sandCap - m.sand;
+  const batch = Math.min(m.dust, CH.batch, room);
+  if (batch > 1e-6 && (m.dust >= CH.batch - 1e-9 || simT - m.lastInput >= CH.partWait)) {
+    // remember why a batch came out small: a nearly full sand store, or too little dust
+    m.short = batch >= CH.batch - 1e-9 ? '' : (room <= m.dust ? 'full' : 'dust');
+    m.dust -= batch; m.batch = batch; m.running = true; m.prog = 0;
+  }
+}
+function stepChamber(m, dt) {
+  if (!m.running) chamberTryStart(m);
+  if (m.running) {
+    m.prog += dt;
+    if (m.prog >= CH.cycle) {
+      m.sand += m.batch; m.made += m.batch; m.events.push([simT, 'sand', m.batch]);
+      m.batch = 0; m.running = false; chamberTryStart(m);
+    }
+  }
+  if (m.sand >= 1 - 1e-9 && simT >= m.nextEmit && offer(nb(m, m.dir), { c: 'sand', kg: 1, p0: ENTRY, ws: simT }, m.dir)) {
+    m.sand -= 1; m.nextEmit = simT + EMIT;
+  }
+  if (m.running) m.status = m.short === 'full' ? 'runFull' : (m.short === 'dust' ? 'runPart' : 'run');
+  else m.status = CH.sandCap - m.sand < 1e-6 ? 'full' : (m.dust < 1e-6 ? 'starve' : 'part');
+  m.util += ((m.running ? 1 : 0) - m.util) * Math.min(1, dt / TAU);
+}
+function pressTryStart(m) {
+  if (m.dust >= 1 - 1e-9 && m.sand >= 1 - 1e-9 && m.stone + PR.stoneKg <= PR.stoneCap + 1e-9) {
+    m.dust -= 1; m.sand -= 1; m.running = true; m.prog = 0;
+  }
+}
+function stepPress(m, dt) {
+  if (!m.running) pressTryStart(m);
+  if (m.running) {
+    m.prog += dt;
+    if (m.prog >= PR.cycle) {
+      m.stone += PR.stoneKg; m.made += PR.stoneKg; m.events.push([simT, 'stone', PR.stoneKg]);
+      m.running = false; pressTryStart(m);
+    }
+  }
+  if (m.stone >= PR.stoneKg - 1e-9 && simT >= m.nextEmit && offer(nb(m, m.dir), { c: 'stone', kg: PR.stoneKg, p0: ENTRY, ws: simT }, m.dir)) {
+    m.stone -= PR.stoneKg; m.nextEmit = simT + EMIT;
+  }
+  if (m.running) m.status = 'run';
+  else if (m.stone + PR.stoneKg > PR.stoneCap + 1e-9) m.status = 'full';
+  else if (m.dust < 1 - 1e-9 && m.sand < 1 - 1e-9) m.status = 'starve';
+  else if (m.dust < 1 - 1e-9) m.status = 'needDust';
+  else m.status = 'needSand';
+  m.util += ((m.running ? 1 : 0) - m.util) * Math.min(1, dt / TAU);
+}
+function stepSplitter(s) {
+  if (!s.buf || !s.outs.length) return;
+  const n = s.outs.length;
+  for (let k = 0; k < n; k++) {
+    const idx = (s.turn + k) % n, d = s.outs[idx];
+    if (offer(nb(s, d), { c: s.buf.c, kg: s.buf.kg, p0: ENTRY, ws: simT }, d)) {
+      s.buf = null; s.turn = (idx + 1) % n; s.sent[idx]++; return;
+    }
+  }
+}
+function stepMerger(m) {
+  if (m.buf && offer(nb(m, m.dir), { c: m.buf.c, kg: m.buf.kg, p0: ENTRY, ws: simT }, m.dir)) m.buf = null;
+}
+function stepBridge(b) {
+  for (let ax = 0; ax < 2; ax++) {
+    const l = b.lane[ax];
+    if (l && offer(nb(b, l.out), { c: l.c, kg: l.kg, p0: ENTRY, ws: simT }, l.out)) b.lane[ax] = null;
+  }
+}
+function step(dt) {
+  simT += dt;
+  for (const s of L.sources) stepSource(s, dt);
+  for (const m of L.chambers) stepChamber(m, dt);
+  for (const m of L.presses) stepPress(m, dt);
+  for (const s of L.splitters) stepSplitter(s);
+  for (const m of L.mergers) stepMerger(m);
+  for (const b of L.bridges) stepBridge(b);
+  for (const b of L.belts) stepBelt(b, dt);
+}
+function resetSim() {
+  for (const t of grid) if (t) resetState(t);
+  simT = 0;
+  analyze();
+}
+function perMin(events, cargo) {
+  const cut = simT - 60;
+  let k = 0; while (k < events.length && events[k][0] < cut) k++;
+  if (k) events.splice(0, k);
+  let sum = 0;
+  for (const e of events) if (!cargo || e[1] === cargo) sum += e[2];
+  const span = Math.min(60, simT);
+  return span > 0.5 ? sum * 60 / span : 0;
+}
+
+// ---------- presets ----------
+function loadTiles(list) {
+  grid = new Array(COLS * ROWS).fill(null);
+  for (const [type, x, y, dir, extra] of list) if (x >= 0 && y >= 0 && x < COLS && y < ROWS) place(type, x, y, dir, extra);
+  selected = null; simT = 0; analyze();
+}
+function preset25() {
+  const T = [];
+  const add = (type, x, y, dir, extra) => T.push([type, x, y, dir, extra]);
+  const belts = pts => pts.forEach(([x, y, d]) => add('belt', x, y, d));
+  add('source', 1, 9, E, { rate: BELT_MAX });
+  belts([[2, 9, E], [3, 9, E]]);
+  add('splitter', 4, 9, E);
+  // half the dust goes up to the chambers
+  belts([[4, 8, N], [4, 7, N], [4, 6, N], [4, 5, N], [4, 4, E], [5, 4, E], [6, 4, E]]);
+  add('splitter', 7, 4, E);
+  belts([[7, 3, N], [7, 2, E], [8, 2, E]]); add('chamber', 9, 2, E);
+  belts([[7, 5, S], [7, 6, E], [8, 6, E]]); add('chamber', 9, 6, E);
+  belts([[10, 2, S], [10, 3, S], [10, 6, N], [10, 5, N]]);
+  add('merger', 10, 4, E);
+  belts([[11, 4, E], [12, 4, S], [12, 5, S], [12, 6, S], [12, 7, S], [12, 8, S], [12, 9, S], [12, 10, S]]);
+  add('bridge', 12, 11, S);
+  belts([[12, 12, S], [12, 13, S], [12, 14, S], [12, 15, E], [13, 15, E]]);
+  // the other half goes along the dust line to the presses
+  belts([[4, 10, S], [4, 11, E]]);
+  for (let x = 5; x <= 11; x++) add('belt', x, 11, E);
+  add('belt', 13, 11, E);
+  const PX = [14, 17, 20, 23, 26];
+  PX.forEach((px, i) => {
+    add('press', px, 13, E);
+    if (i < 4) {
+      add('splitter', px, 11, E); add('belt', px, 12, S);
+      add('belt', px + 1, 11, E); add('belt', px + 2, 11, E);
+      add('splitter', px, 15, E); add('belt', px, 14, N);
+      add('bridge', px + 1, 15, S); add('belt', px + 2, 15, E);
+    } else {
+      add('belt', px, 11, S); add('belt', px, 12, S);
+      add('belt', px, 15, N); add('belt', px, 14, N);
+      add('belt', px + 1, 15, S);
+    }
+    add('belt', px + 1, 13, S); add('belt', px + 1, 14, S); add('belt', px + 1, 16, S);
+    if (i === 0) add('belt', px + 1, 17, E); else add('merger', px + 1, 17, E);
+    if (i < 4) { add('belt', px + 2, 17, E); add('belt', px + 3, 17, E); }
+  });
+  belts([[28, 17, E], [29, 17, E]]);
+  add('collector', 30, 17, E);
+  loadTiles(T);
+}
+function preset11() {
+  const T = [];
+  const add = (type, x, y, dir, extra) => T.push([type, x, y, dir, extra]);
+  const belts = pts => pts.forEach(([x, y, d]) => add('belt', x, y, d));
+  add('source', 1, 6, E, { rate: BELT_MAX });
+  belts([[2, 6, E], [3, 6, E]]);
+  add('splitter', 4, 6, E);
+  belts([[4, 5, N], [4, 4, N], [4, 3, E], [5, 3, E]]);
+  add('chamber', 6, 3, E);
+  belts([[7, 3, E], [8, 3, E], [9, 3, S], [9, 4, S], [9, 5, S]]);
+  belts([[4, 7, S], [4, 8, E], [5, 8, E], [6, 8, E], [7, 8, E], [8, 8, E], [9, 8, N], [9, 7, N]]);
+  add('press', 9, 6, E);
+  belts([[10, 6, E], [11, 6, E], [12, 6, E]]);
+  add('collector', 13, 6, E);
+  loadTiles(T);
+}
+
+// ---------- storage (per-viewer convenience only) ----------
+const STORE_KEY = 'dust-to-stone-layout-v1';
+function saveLayout() {
+  try {
+    const list = [];
+    for (const t of grid) if (t) list.push(t.type === 'source' ? [t.type, t.x, t.y, t.dir, { rate: t.rate }] : [t.type, t.x, t.y, t.dir]);
+    localStorage.setItem(STORE_KEY, JSON.stringify(list));
+  } catch (e) { /* storage unavailable; the planner still works */ }
+}
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return false;
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list) || !list.length) return false;
+    loadTiles(list.filter(r => Array.isArray(r) && NAMES[r[0]]));
+    return true;
+  } catch (e) { return false; }
+}
+
+// ---------- share codes ----------
+// Plain letters and digits, so a code survives being pasted into a comment. Each piece is 4 characters:
+// type letter, column and row in base 36, facing 0-3. A dust source adds its rate as 2 more characters.
+const CODE_PREFIX = 'DTS1-';
+const CODE_TYPE = { belt: 'b', splitter: 's', merger: 'm', bridge: 'x', source: 'd', chamber: 'c', press: 'p', collector: 'l' };
+const CODE_NAME = Object.fromEntries(Object.entries(CODE_TYPE).map(([k, v]) => [v, k]));
+function layoutCode() {
+  let s = CODE_PREFIX;
+  for (const t of grid) if (t) {
+    s += CODE_TYPE[t.type] + t.x.toString(36) + t.y.toString(36) + t.dir;
+    if (t.type === 'source') s += Math.max(5, Math.min(BELT_MAX, Math.round(t.rate))).toString(36).padStart(2, '0');
+  }
+  return s;
+}
+function parseCode(text) {
+  const m = /DTS1-([0-9a-z]+)/i.exec(String(text || '').replace(/\s+/g, ''));
+  if (!m) return null;
+  const body = m[1].toLowerCase(), list = [];
+  let i = 0;
+  while (i < body.length) {
+    const type = CODE_NAME[body[i]];
+    if (!type || i + 4 > body.length) return null;
+    const x = parseInt(body[i + 1], 36), y = parseInt(body[i + 2], 36), dir = parseInt(body[i + 3], 10);
+    if (!(x < COLS) || !(y < ROWS) || !(dir >= 0 && dir <= 3)) return null;
+    i += 4;
+    if (type === 'source') {
+      const rate = parseInt(body.slice(i, i + 2), 36);
+      if (i + 2 > body.length || !(rate > 0)) return null;
+      list.push([type, x, y, dir, { rate: Math.max(5, Math.min(BELT_MAX, rate)) }]);
+      i += 2;
+    } else list.push([type, x, y, dir]);
+  }
+  return list.length ? list : null;
+}
+function loadFromLink() {
+  try {
+    const m = /[#&]l=([^&]+)/.exec(location.hash);
+    const list = m && parseCode(decodeURIComponent(m[1]));
+    if (!list) return false;
+    loadTiles(list);
+    return true;
+  } catch (e) { return false; }
+}
+
+// ---------- drawing ----------
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const scroller = document.getElementById('boardScroll');
+let C = {};
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const names = ['floor', 'floor-line', 'belt', 'belt-mark', 'dust', 'sand', 'stone', 'item-edge', 'c-source', 'c-chamber', 'c-press', 'c-splitter', 'c-merger', 'c-bridge', 'c-collector', 'ok', 'warn', 'bad', 'idle', 'accent', 'ink', 'panel'];
+  for (const n of names) C[n] = cs.getPropertyValue('--' + n).trim();
+}
+function fitCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = COLS * TS * dpr; cv.height = ROWS * TS * dpr;
+  cv.style.width = COLS * TS + 'px'; cv.style.height = ROWS * TS + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function autoZoom() {
+  const w = scroller.clientWidth - 1;
+  const next = Math.max(18, Math.min(40, Math.floor(w / COLS)));
+  if (next !== TS || !fitted) { TS = next; fitCanvas(); fitted = true; }
+}
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function beltPoint(b, p) {
+  const cx = b.x + 0.5, cy = b.y + 0.5, fd = b.dir;
+  const ins = b.inSide >= 0 ? b.inSide : opp(fd);
+  const sx = cx + DX[ins] * 0.5, sy = cy + DY[ins] * 0.5;
+  const ex = cx + DX[fd] * 0.5, ey = cy + DY[fd] * 0.5;
+  if (ins === opp(fd)) return [sx + (ex - sx) * p, sy + (ey - sy) * p];
+  if (p < 0.5) { const q = p / 0.5; return [sx + (cx - sx) * q, sy + (cy - sy) * q]; }
+  const q = (p - 0.5) / 0.5; return [cx + (ex - cx) * q, cy + (ey - cy) * q];
+}
+function drawArrowHead(x, y, d, size, color) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(d * Math.PI / 2);
+  ctx.beginPath(); ctx.moveTo(size * 0.55, 0); ctx.lineTo(-size * 0.35, -size * 0.5); ctx.lineTo(-size * 0.35, size * 0.5); ctx.closePath();
+  ctx.fillStyle = color; ctx.fill(); ctx.restore();
+}
+function drawBelt(b, ghost) {
+  const px = b.x * TS, py = b.y * TS, w = TS * 0.62, half = w / 2;
+  const cx = px + TS / 2, cy = py + TS / 2;
+  const ins = (!ghost && b.inSide >= 0) ? b.inSide : opp(b.dir);
+  ctx.fillStyle = C.belt;
+  const seg = (d) => { // band from the centre to edge d
+    if (d === E) ctx.fillRect(cx - half, cy - half, TS / 2 + half, w);
+    if (d === W) ctx.fillRect(px, cy - half, TS / 2 + half, w);
+    if (d === S) ctx.fillRect(cx - half, cy - half, w, TS / 2 + half);
+    if (d === N) ctx.fillRect(cx - half, py, w, TS / 2 + half);
+  };
+  seg(b.dir); seg(ins);
+  // moving chevrons
+  ctx.strokeStyle = C['belt-mark']; ctx.lineWidth = Math.max(1, TS / 18); ctx.lineCap = 'round';
+  const phase = ((simT * SPEED) % (1 / 3)) * 3;
+  for (let k = 0; k < 3; k++) {
+    const p = (k + phase) / 3;
+    const [x, y] = beltPoint(b, p);
+    const d = (ins === opp(b.dir) || p >= 0.5) ? b.dir : opp(ins);
+    const s = TS * 0.13;
+    ctx.save(); ctx.translate(x * TS, y * TS); ctx.rotate(d * Math.PI / 2);
+    ctx.beginPath(); ctx.moveTo(-s * 0.5, -s); ctx.lineTo(s * 0.5, 0); ctx.lineTo(-s * 0.5, s); ctx.stroke();
+    ctx.restore();
+  }
+  if (!ghost && b.deadEnd) {
+    ctx.fillStyle = C.bad;
+    const t = Math.max(2, TS / 9);
+    if (b.dir === E) ctx.fillRect(px + TS - t, cy - half, t, w);
+    if (b.dir === W) ctx.fillRect(px, cy - half, t, w);
+    if (b.dir === S) ctx.fillRect(cx - half, py + TS - t, w, t);
+    if (b.dir === N) ctx.fillRect(cx - half, py, w, t);
+  }
+  if (!ghost && b.conflict) {
+    ctx.fillStyle = C.bad; ctx.beginPath(); ctx.arc(cx, cy, TS * 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.round(TS * 0.3)}px ${getFont('mono')}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('!', cx, cy + 1);
+  }
+}
+let fontCache = {};
+function getFont(role) {
+  if (!fontCache[role]) fontCache[role] = getComputedStyle(document.documentElement).getPropertyValue(role === 'mono' ? '--font-mono' : '--font-display').trim();
+  return fontCache[role];
+}
+const LABEL = { source: 'D', chamber: 'PC', press: 'SP', splitter: 'S', merger: 'M', bridge: '', collector: '$' };
+const COLOR = { source: 'c-source', chamber: 'c-chamber', press: 'c-press', splitter: 'c-splitter', merger: 'c-merger', bridge: 'c-bridge', collector: 'c-collector' };
+function statusColor(t) {
+  if (t.type === 'source') return t.stall > 0.05 ? C.bad : C.ok;
+  switch (t.status) {
+    case 'run': return C.ok;
+    case 'full': case 'runFull': return C.bad;
+    case 'idle': return C.idle;
+    default: return C.warn;
+  }
+}
+function drawBlock(t, ghost) {
+  const px = t.x * TS, py = t.y * TS, inset = Math.max(2, TS * 0.08);
+  const x = px + inset, y = py + inset, s = TS - inset * 2, r = Math.max(3, TS * 0.16);
+  const isMachine = t.type === 'chamber' || t.type === 'press' || t.type === 'source';
+  rr(x, y, s, s, r);
+  ctx.fillStyle = C[COLOR[t.type]]; ctx.fill();
+  if (!ghost && isMachine && simT > 0) {
+    ctx.lineWidth = Math.max(2, TS / 11); ctx.strokeStyle = statusColor(t); ctx.stroke();
+  }
+  const cx = px + TS / 2, cy = py + TS / 2;
+  if (t.type === 'bridge') {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    const w = s * 0.22;
+    ctx.fillRect(cx - s * 0.36, cy - w / 2, s * 0.72, w);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(cx - w / 2 - 1.5, cy - s * 0.36, w + 3, s * 0.72);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(cx - w / 2, cy - s * 0.36, w, s * 0.72);
+  } else {
+    ctx.fillStyle = '#fff';
+    const fs = Math.round(TS * (LABEL[t.type].length > 1 ? 0.3 : 0.38));
+    ctx.font = `700 ${fs}px ${getFont('display')}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lift = isMachine && t.type !== 'source' ? TS * 0.08 : 0;
+    ctx.fillText(LABEL[t.type], cx, cy - lift + 1);
+  }
+  // output arrows
+  const edge = (d) => [cx + DX[d] * (s / 2 - TS * 0.05), cy + DY[d] * (s / 2 - TS * 0.05)];
+  const aSize = TS * 0.22;
+  if (t.type === 'splitter') {
+    for (const d of [t.dir, leftOf(t.dir), rightOf(t.dir)]) {
+      const used = ghost || (t.outs && t.outs.includes(d));
+      const [ax, ay] = edge(d); drawArrowHead(ax, ay, d, aSize, used ? '#fff' : 'rgba(255,255,255,0.3)');
+    }
+  } else if (t.type !== 'bridge' && t.type !== 'collector') {
+    const [ax, ay] = edge(t.dir);
+    drawArrowHead(ax, ay, t.dir, aSize, (!ghost && t.deadEnd) ? C.bad : '#fff');
+  }
+  // store gauges
+  if (!ghost && (t.type === 'chamber' || t.type === 'press') && TS >= 22) {
+    const gx = x + s * 0.14, gw = s * 0.72, gh = Math.max(2, TS * 0.07);
+    let gy = y + s - gh * 1.6 - (t.type === 'press' ? gh * 1.4 : 0);
+    const gauge = (val, cap, color) => {
+      ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fillRect(gx, gy, gw, gh);
+      ctx.fillStyle = color; ctx.fillRect(gx, gy, gw * Math.max(0, Math.min(1, val / cap)), gh);
+      gy += gh * 1.4;
+    };
+    if (t.type === 'chamber') { gauge(t.dust, CH.dustCap, C.dust); }
+    else { gauge(t.dust, PR.dustCap, C.dust); gauge(t.sand, PR.sandCap, C.sand); }
+    if (t.running) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = Math.max(1.5, TS / 16);
+      ctx.beginPath(); ctx.arc(x + s - TS * 0.17, y + TS * 0.17, TS * 0.09, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (t.prog / (t.type === 'chamber' ? CH.cycle : PR.cycle))); ctx.stroke();
+    }
+  }
+}
+function drawItem(px, py, c) {
+  const r = Math.max(2.5, TS * 0.17) * (c === 'stone' ? 1.12 : 1);
+  ctx.beginPath();
+  if (c === 'stone') { rr(px - r, py - r, r * 2, r * 2, r * 0.35); } else { ctx.arc(px, py, r, 0, Math.PI * 2); }
+  ctx.fillStyle = C[c]; ctx.fill();
+  ctx.lineWidth = 1; ctx.strokeStyle = C['item-edge']; ctx.stroke();
+}
+function draw() {
+  const W_ = COLS * TS, H_ = ROWS * TS;
+  ctx.fillStyle = C.floor; ctx.fillRect(0, 0, W_, H_);
+  ctx.strokeStyle = C['floor-line']; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x <= COLS; x++) { ctx.moveTo(x * TS + 0.5, 0); ctx.lineTo(x * TS + 0.5, H_); }
+  for (let y = 0; y <= ROWS; y++) { ctx.moveTo(0, y * TS + 0.5); ctx.lineTo(W_, y * TS + 0.5); }
+  ctx.stroke();
+  for (const b of L.belts) drawBelt(b, false);
+  for (const t of grid) if (t && t.type !== 'belt') drawBlock(t, false);
+  for (const b of L.belts) for (const it of b.items) { const [x, y] = beltPoint(b, it.p); drawItem(x * TS, y * TS, it.c); }
+  for (const s of L.splitters) if (s.buf) drawItem((s.x + 0.5) * TS, (s.y + 0.5) * TS, s.buf.c);
+  for (const m of L.mergers) if (m.buf) drawItem((m.x + 0.5) * TS, (m.y + 0.5) * TS, m.buf.c);
+  for (const b of L.bridges) for (const l of b.lane) if (l) drawItem((b.x + 0.5) * TS, (b.y + 0.5) * TS, l.c);
+  if (selected) {
+    ctx.save(); ctx.strokeStyle = C.accent; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.strokeRect(selected.x * TS + 1, selected.y * TS + 1, TS - 2, TS - 2); ctx.restore();
+  }
+  if (hover && !at(hover.x, hover.y) && NAMES[tool]) {
+    ctx.save(); ctx.globalAlpha = 0.45;
+    const g = { type: tool, x: hover.x, y: hover.y, dir: rot, inSide: -1 };
+    if (tool === 'belt') drawBelt(g, true); else drawBlock(g, true);
+    ctx.restore();
+  } else if (hover && tool === 'erase' && at(hover.x, hover.y)) {
+    ctx.save(); ctx.strokeStyle = C.bad; ctx.lineWidth = 2; ctx.strokeRect(hover.x * TS + 1, hover.y * TS + 1, TS - 2, TS - 2); ctx.restore();
+  }
+}
+
+// ---------- panels ----------
+const $ = id => document.getElementById(id);
+let dirtyPanels = true;
+const fmt = (v, d = 0) => (Math.round(v * 10 ** d) / 10 ** d).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+const clock = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+function renderReadouts() {
+  let stoneSold = 0, otherSold = 0, dustIn = 0, made = 0, stall = 0;
+  for (const c of L.collectors) { stoneSold += perMin(c.events, 'stone'); otherSold += perMin(c.events, 'dust') + perMin(c.events, 'sand'); }
+  for (const s of L.sources) { dustIn += perMin(s.events); stall += s.stall; }
+  for (const p of L.presses) made += perMin(p.events);
+  stall = L.sources.length ? stall / L.sources.length : 0;
+  $('readouts').innerHTML = `
+    <div class="ro" style="grid-column: 1 / -1"><span class="ro-label">Stone reaching collectors</span><span class="ro-val big">${fmt(stoneSold)}<small>kg/min</small></span></div>
+    <div class="ro"><span class="ro-label">Dust going in</span><span class="ro-val">${fmt(dustIn)}<small>/min</small></span></div>
+    <div class="ro"><span class="ro-label">Stone pressed</span><span class="ro-val">${fmt(made)}<small>kg/min</small></span></div>
+    <div class="ro"><span class="ro-label">Dust supply held up</span><span class="ro-val" style="color:${stall > 0.05 ? 'var(--bad)' : 'inherit'}">${fmt(stall * 100)}<small>%</small></span></div>
+    <div class="ro"><span class="ro-label">Test time</span><span class="ro-val">${clock(simT)}</span></div>
+    ${otherSold > 0.05 ? `<div class="ro" style="grid-column: 1 / -1"><span class="ro-label">Dust and sand sold unprocessed</span><span class="ro-val">${fmt(otherSold)}<small>kg/min</small></span></div>` : ''}`;
+}
+function renderBalance() {
+  const c = L.chambers.length, p = L.presses.length;
+  const dust = L.sources.reduce((a, s) => a + Math.min(s.rate, BELT_MAX), 0);
+  const el = $('balance');
+  if (!c && !p) { el.innerHTML = `<p class="empty">Place pressure chambers and stone presses to see whether they're balanced. The best ratio is 2 chambers to 5 presses.</p>`; return; }
+  const sandMake = 25 * c, sandUse = 10 * p, dustUse = 25 * c + 10 * p;
+  const best = 2 * Math.min(sandUse, sandMake, dust / 2);
+  let limit = 'presses';
+  const lim = Math.min(sandUse, sandMake, dust / 2);
+  if (lim === dust / 2 && dust / 2 < Math.min(sandUse, sandMake)) limit = 'dust supply';
+  else if (lim === sandMake && sandMake < sandUse) limit = 'chambers';
+  const balanced = c > 0 && p > 0 && Math.abs(sandMake - sandUse) <= 0.1 * Math.max(sandMake, sandUse);
+  const pill = balanced ? '<span class="pill ok">balanced</span>' : (c && p ? '<span class="pill warn">unbalanced</span>' : '<span class="pill bad">incomplete</span>');
+  let advice = '';
+  if (!p) advice = 'No stone presses yet. Chambers only make sand, which sells for less than stone.';
+  else if (!c) advice = 'No pressure chambers yet. Presses need sand from a chamber to make stone.';
+  else if (sandMake > sandUse * 1.1) { const add = Math.ceil((sandMake - sandUse) / 10); advice = `Chambers make more sand than the presses can use, so sand will back up. Add ${add} press${add > 1 ? 'es' : ''}, or remove a chamber.`; }
+  else if (sandUse > sandMake * 1.1) { const add = Math.ceil((sandUse - sandMake) / 25); advice = `Presses will sit waiting for sand. Add ${add} chamber${add > 1 ? 's' : ''}.`; }
+  if (dust > 0 && dust > dustUse * 1.05) advice += (advice ? ' ' : '') + `Your sources give more dust than these machines can use (${fmt(dust)} vs ${fmt(dustUse)} a minute), so the extra will back up. Add machines or send the extra to a collector.`;
+  else if (dust < dustUse * 0.95 && c && p) advice += (advice ? ' ' : '') + `There isn't enough dust to keep every machine busy (${fmt(dust)} of ${fmt(dustUse)} a minute).`;
+  el.innerHTML = `
+    <p class="ratio">${c} chamber${c === 1 ? '' : 's'} : ${p} press${p === 1 ? '' : 'es'} ${pill}</p>
+    <ul class="facts">
+      <li><span>Sand chambers can make</span><span>${fmt(sandMake)} kg/min</span></li>
+      <li><span>Sand presses can use</span><span>${fmt(sandUse)} kg/min</span></li>
+      <li><span>Dust all machines can use</span><span>${fmt(dustUse)} /min</span></li>
+      <li><span>Dust your sources give</span><span>${fmt(dust)} /min</span></li>
+    </ul>
+    <p class="limit">Best possible: <b>${fmt(best)} kg of stone a minute</b>, limited by ${limit}. That assumes half the dust reaches chambers and half goes straight to presses.</p>
+    ${advice ? `<p class="advice">${advice}</p>` : ''}`;
+}
+const STATUS_TEXT = {
+  run: ['Running', 'st-run'], full: ['Backed up: output is full', 'st-bad'], idle: ['Idle', 'st-idle'],
+  runFull: ['Backed up: sand store nearly full, so it runs small batches', 'st-bad'],
+  runPart: ['Running a small batch (under 5 kg of dust)', 'st-wait'],
+  starve: ['Waiting for input', 'st-wait'], part: ['Collecting a 5 kg batch', 'st-wait'],
+  needDust: ['Waiting for dust', 'st-wait'], needSand: ['Waiting for sand', 'st-wait'],
+};
+function bar(label, val, cap, color, unit = 'kg') {
+  return `<div class="bar"><span>${label}</span><div class="track"><div class="fill" style="width:${Math.max(0, Math.min(100, val / cap * 100))}%;background:${color}"></div></div><span class="num">${fmt(val, val % 1 ? 1 : 0)}/${cap} ${unit}</span></div>`;
+}
+let rateInputFocused = false;
+function renderInspector() {
+  const el = $('inspector');
+  const t = selected;
+  if (!t || at(t.x, t.y) !== t) { el.innerHTML = `<p class="empty">Pick <b>Select</b> and click any piece to see its numbers while the test runs.</p>`; return; }
+  if (t.type === 'source' && rateInputFocused) {
+    const o = el.querySelector('#rateOut'); if (o) o.textContent = `${t.rate}/min`;
+    return;
+  }
+  const head = (extra = '') => `<div class="insp-head"><span class="swatch" style="background:var(--${COLOR[t.type] || 'belt'})"></span><strong>${NAMES[t.type]}</strong></div><div style="font-size:12px;color:var(--muted)">${cell(t)} · facing ${SIDE[t.dir]}${extra}</div>`;
+  let body = '';
+  if (t.type === 'chamber') {
+    const [txt, cls] = STATUS_TEXT[simT > 0 ? t.status : 'idle'];
+    body = `<div class="status ${cls}">${txt}</div><div class="bars">
+      ${bar('Dust in', t.dust, CH.dustCap, 'var(--dust)')}
+      ${bar('Batch', t.batch, CH.batch, 'var(--dust)')}
+      ${bar('Sand out', t.sand, CH.sandCap, 'var(--sand)')}
+      ${bar('Cycle', t.running ? t.prog : 0, CH.cycle, 'var(--c-chamber)', 's')}
+    </div><p class="insp-note">Busy ${fmt(t.util * 100)}% of the time · ${fmt(perMin(t.events))} kg sand/min · ${fmt(t.made)} kg made</p>`;
+  } else if (t.type === 'press') {
+    const [txt, cls] = STATUS_TEXT[simT > 0 ? t.status : 'idle'];
+    body = `<div class="status ${cls}">${txt}</div><div class="bars">
+      ${bar('Dust in', t.dust, PR.dustCap, 'var(--dust)')}
+      ${bar('Sand in', t.sand, PR.sandCap, 'var(--sand)')}
+      ${bar('Stone out', t.stone, PR.stoneCap, 'var(--stone)')}
+      ${bar('Cycle', t.running ? t.prog : 0, PR.cycle, 'var(--c-press)', 's')}
+    </div><p class="insp-note">Busy ${fmt(t.util * 100)}% of the time · ${fmt(perMin(t.events))} kg stone/min · ${fmt(t.made)} kg made</p>`;
+  } else if (t.type === 'source') {
+    const st = t.stall > 0.05 ? ['Held up: the belt is full', 'st-bad'] : ['Flowing', 'st-run'];
+    body = `<div class="status ${simT > 0 ? st[1] : 'st-idle'}">${simT > 0 ? st[0] : 'Idle'}</div>
+      <div class="rate-row"><input id="rateIn" type="range" min="5" max="${BELT_MAX}" step="1" value="${t.rate}" aria-label="Dust per minute"><output id="rateOut">${t.rate}/min</output></div>
+      <p class="insp-note">How much dust this source tries to send. ${BELT_MAX}/min is the most one belt can carry. A packager can push out a canister every 0.35 s, so a busy packager fills a belt by itself.</p>
+      <p class="insp-note">Sent ${fmt(perMin(t.events))}/min · held up ${fmt(t.stall * 100)}% of the time</p>`;
+  } else if (t.type === 'splitter') {
+    const names = t.outs.map(d => d === t.dir ? 'Straight' : (d === leftOf(t.dir) ? 'Left' : 'Right'));
+    body = `<p class="insp-note" style="margin-top:4px">Takes turns between its exits and skips one that's backed up.</p>
+      <ul class="facts" style="margin-top:6px">${names.map((n, i) => `<li><span>${n} exit (${SIDE[t.outs[i]]})</span><span>${t.sent[i]} sent</span></li>`).join('') || '<li><span>No exits connected</span><span></span></li>'}</ul>`;
+  } else if (t.type === 'collector') {
+    body = `<ul class="facts" style="margin-top:4px">
+      <li><span>Stone</span><span>${fmt(t.got.stone)} kg · ${fmt(perMin(t.events, 'stone'))}/min</span></li>
+      <li><span>Sand</span><span>${fmt(t.got.sand)} kg · ${fmt(perMin(t.events, 'sand'))}/min</span></li>
+      <li><span>Dust</span><span>${fmt(t.got.dust)} kg · ${fmt(perMin(t.events, 'dust'))}/min</span></li></ul>
+      <p class="insp-note">Sells whatever arrives. Feed it from any side.</p>`;
+  } else if (t.type === 'belt') {
+    body = `<p class="insp-note" style="margin-top:4px">${t.items.length} canister${t.items.length === 1 ? '' : 's'} on this metre. ${t.conflict ? '<b>Two belts feed into this one.</b> Use a Merger.' : ''}${t.deadEnd ? ' <b>Its end isn\'t connected.</b>' : ''}</p>`;
+  } else if (t.type === 'merger') {
+    body = `<p class="insp-note" style="margin-top:4px">Joins belts from the back and both sides into one belt out the front. A merged belt still carries ${BELT_MAX} canisters/min at most.</p>`;
+  } else if (t.type === 'bridge') {
+    body = `<p class="insp-note" style="margin-top:4px">Carries one belt over another. Canisters leave on the side opposite where they came in.</p>`;
+  }
+  el.innerHTML = head() + body;
+  const ri = el.querySelector('#rateIn');
+  if (ri) {
+    ri.addEventListener('input', () => { t.rate = +ri.value; el.querySelector('#rateOut').textContent = `${t.rate}/min`; saveLayout(); renderBalance(); });
+    ri.addEventListener('focus', () => { rateInputFocused = true; });
+    ri.addEventListener('blur', () => { rateInputFocused = false; });
+    ri.addEventListener('pointerdown', () => { rateInputFocused = true; });
+    ri.addEventListener('pointerup', () => { rateInputFocused = false; });
+  }
+}
+function renderWarnings() {
+  const el = $('warnings');
+  if (!warnings.length) { el.innerHTML = `<p class="empty">No disconnected belts or missing mergers.</p>`; return; }
+  el.innerHTML = `<ul class="warnlist">${warnings.slice(0, 12).map((w, i) => `<li><button type="button" data-w="${i}"><span class="dot ${w.sev === 'bad' ? 'bad' : ''}"></span><span>${w.text}</span></button></li>`).join('')}</ul>${warnings.length > 12 ? `<p class="empty" style="margin-top:6px">…and ${warnings.length - 12} more.</p>` : ''}`;
+  el.querySelectorAll('button[data-w]').forEach(btn => btn.addEventListener('click', () => {
+    const w = warnings[+btn.dataset.w]; selected = w.t; setTool('select'); dirtyPanels = true;
+    scroller.scrollTo({ left: Math.max(0, w.t.x * TS - scroller.clientWidth / 2), top: Math.max(0, w.t.y * TS - scroller.clientHeight / 2) });
+  }));
+}
+function renderLegend() {
+  const blocks = [['Dust source', 'c-source'], ['Pressure chamber', 'c-chamber'], ['Stone press', 'c-press'], ['Collector', 'c-collector'], ['Splitter', 'c-splitter'], ['Merger', 'c-merger'], ['Bridge', 'c-bridge'], ['Belt', 'belt']];
+  const rings = [['Running', 'ok'], ['Waiting for input', 'warn'], ['Backed up', 'bad']];
+  const cans = [['Dust (1 kg)', 'dust'], ['Sand (1 kg)', 'sand'], ['Stone (2 kg)', 'stone']];
+  $('legend').innerHTML =
+    blocks.map(([n, c]) => `<div><span class="swatch" style="background:var(--${c})"></span>${n}</div>`).join('') +
+    rings.map(([n, c]) => `<div><span class="ring" style="border-color:var(--${c})"></span>${n}</div>`).join('') +
+    cans.map(([n, c]) => `<div><span class="can" style="background:var(--${c})"></span>${n}</div>`).join('') +
+    `<div><span class="swatch" style="background:var(--bad);height:4px"></span>Unconnected end</div>`;
+}
+function renderPanels() {
+  renderReadouts(); renderBalance(); renderInspector(); renderWarnings();
+}
+
+// ---------- controls ----------
+const toolsEl = $('tools');
+for (const t of TOOLS) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.tool = t.id; b.title = `${t.name} (${t.key})`;
+  b.innerHTML = (t.color ? `<span class="swatch" style="background:var(${t.color})"></span>` : '') + `${t.name} <span class="key">${t.key}</span>`;
+  b.addEventListener('click', () => setTool(t.id));
+  toolsEl.appendChild(b);
+}
+function setTool(id) {
+  tool = id;
+  toolsEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === id ? 'true' : 'false'));
+  cv.classList.toggle('pan', id === 'select');
+  cv.style.cursor = id === 'select' ? 'pointer' : (id === 'erase' ? 'not-allowed' : 'crosshair');
+  const hints = {
+    select: 'Click a piece to see its numbers. Drag to move around the floor. Pick a build tool above to change the layout.',
+    belt: 'Drag to draw a belt; it follows your drag. Click a belt to turn it.',
+    erase: 'Click or drag over pieces to remove them.',
+  };
+  $('hint').innerHTML = hints[id] || `Click to place a ${NAMES[id].toLowerCase()} facing <b>${SIDE[rot]}</b>. Press <b>R</b> to turn it first, or click it again after placing.`;
+}
+function setRot(r) { rot = r & 3; $('rotGlyph').textContent = ARROW[rot]; if (NAMES[tool] && tool !== 'belt') setTool(tool); }
+$('rotBtn').addEventListener('click', rotateAction);
+function rotateAction() {
+  if (tool === 'select' && selected) { selected.dir = (selected.dir + 1) & 3; analyze(); }
+  else setRot(rot + 1);
+}
+function setRunning(v) {
+  running = v;
+  $('runBtn').textContent = running ? '❚❚ Pause' : (simT > 0 ? '▶ Resume' : '▶ Run test');
+}
+$('runBtn').addEventListener('click', () => setRunning(!running));
+$('resetBtn').addEventListener('click', () => { resetSim(); setRunning(false); dirtyPanels = true; });
+const SPEEDS = [1, 5, 20, 60];
+const seg = $('speedSeg');
+for (const s of SPEEDS) {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = s + '×'; b.title = `${s}× speed`;
+  b.addEventListener('click', () => setSpeed(s)); seg.appendChild(b);
+}
+function setSpeed(s) { speed = s; seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.textContent === s + '×' ? 'true' : 'false')); }
+$('preset25').addEventListener('click', () => { preset25(); setRunning(false); });
+$('preset11').addEventListener('click', () => { preset11(); setRunning(false); });
+$('clearBtn').addEventListener('click', () => { loadTiles([]); setRunning(false); });
+$('zoomIn').addEventListener('click', () => { manualZoom = true; TS = Math.min(48, TS + 4); fitCanvas(); });
+$('zoomOut').addEventListener('click', () => { manualZoom = true; TS = Math.max(16, TS - 4); fitCanvas(); });
+
+// ---------- share dialog ----------
+const shareDlg = $('shareDlg');
+let topLevel = false;
+try { topLevel = window.self === window.top; } catch (e) { /* inside a frame we can't read */ }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fall back below */ }
+  try {
+    // the old way; the textarea goes inside the dialog because the rest of the page is inert while it's open
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.readOnly = true; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    shareDlg.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+function shareLink() { return location.href.split('#')[0] + '#l=' + layoutCode(); }
+$('shareBtn').addEventListener('click', () => {
+  $('shareCode').value = layoutCode();
+  $('copyMsg').textContent = ''; $('loadMsg').textContent = ''; $('loadMsg').classList.remove('bad');
+  $('copyLink').hidden = !topLevel;
+  shareDlg.showModal();
+});
+$('copyCode').addEventListener('click', async () => {
+  const ok = await copyText($('shareCode').value);
+  if (!ok) $('shareCode').select();
+  $('copyMsg').textContent = ok ? 'Copied.' : "Couldn't copy here. The code is selected, so press Ctrl+C.";
+});
+$('copyLink').addEventListener('click', async () => {
+  const ok = await copyText(shareLink());
+  $('copyMsg').textContent = ok ? 'Link copied.' : "Couldn't copy the link here. Copy the code instead.";
+});
+$('loadBtn').addEventListener('click', () => {
+  const list = parseCode($('loadCode').value);
+  const msg = $('loadMsg');
+  if (!list) {
+    msg.textContent = "That code didn't work. Check that you copied all of it, starting with DTS1-.";
+    msg.classList.add('bad');
+    return;
+  }
+  loadTiles(list); setRunning(false); setTool('select');
+  $('loadCode').value = '';
+  shareDlg.close();
+  $('hint').innerHTML = `Loaded a shared layout with ${list.length} pieces. Press <b>Run test</b> to watch it.`;
+});
+
+// ---------- pointer editing ----------
+let drag = null, pan = null;
+function tileFromEvent(e) {
+  const r = cv.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left) / TS), y = Math.floor((e.clientY - r.top) / TS);
+  return (x < 0 || y < 0 || x >= COLS || y >= ROWS) ? null : { x, y };
+}
+function dirBetween(a, b) { if (b.x > a.x) return E; if (b.x < a.x) return W; if (b.y > a.y) return S; return N; }
+cv.addEventListener('contextmenu', e => e.preventDefault());
+// stop the browser's own middle-click autoscroll so middle-drag can move the floor instead
+cv.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
+cv.addEventListener('pointerdown', e => {
+  // Touch screens scroll natively with Select (see the .pan class). Mice drag the floor with Select, or with
+  // the middle button whatever tool is picked.
+  if (e.button === 1 || (tool === 'select' && e.button === 0 && e.pointerType === 'mouse')) {
+    pan = { x: e.clientX, y: e.clientY, left: scroller.scrollLeft, top: scroller.scrollTop, moved: false };
+    cv.setPointerCapture(e.pointerId);
+    if (e.button === 1) return;
+  }
+  const p = tileFromEvent(e); if (!p) return;
+  if (e.button === 2) { erase(p.x, p.y); analyze(); return; }
+  if (e.button !== 0) return;
+  const t = at(p.x, p.y);
+  if (tool === 'select') { selected = t; dirtyPanels = true; return; }
+  cv.setPointerCapture(e.pointerId);
+  drag = { last: p, start: p, moved: false, existed: !!t };
+  if (tool === 'erase') { erase(p.x, p.y); analyze(); return; }
+  if (tool === 'belt') { if (!t) { place('belt', p.x, p.y, rot); analyze(); } return; }
+  if (t && t.type === tool) { t.dir = (t.dir + 1) & 3; selected = t; analyze(); return; }
+  if (t) erase(p.x, p.y);
+  selected = place(tool, p.x, p.y, rot); analyze();
+});
+cv.addEventListener('pointermove', e => {
+  const p = tileFromEvent(e);
+  hover = p;
+  if (pan) {
+    const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+    if (!pan.moved && Math.abs(dx) + Math.abs(dy) > 4) { pan.moved = true; cv.style.cursor = 'grabbing'; }
+    if (pan.moved) { scroller.scrollLeft = pan.left - dx; scroller.scrollTop = pan.top - dy; }
+    return;
+  }
+  if (!drag || !p) return;
+  if (p.x === drag.last.x && p.y === drag.last.y) return;
+  if (tool === 'erase') { erase(p.x, p.y); drag.last = p; analyze(); return; }
+  if (tool !== 'belt') return;
+  // walk one square at a time so fast drags don't leave gaps
+  let cur = drag.last;
+  while (cur.x !== p.x || cur.y !== p.y) {
+    const next = { x: cur.x + Math.sign(p.x - cur.x), y: cur.x !== p.x ? cur.y : cur.y + Math.sign(p.y - cur.y) };
+    const d = dirBetween(cur, next);
+    const prev = at(cur.x, cur.y);
+    if (prev && prev.type === 'belt') prev.dir = d;
+    const nt = at(next.x, next.y);
+    if (!nt) place('belt', next.x, next.y, d);
+    else if (nt.type === 'belt') nt.dir = d;
+    else { drag.last = next; drag.moved = true; break; }
+    cur = next;
+  }
+  drag.last = p; drag.moved = true;
+  analyze();
+});
+cv.addEventListener('pointerup', e => {
+  if (pan) { if (pan.moved) setTool(tool); pan = null; return; }
+  if (drag && tool === 'belt' && !drag.moved && drag.existed) {
+    const t = at(drag.start.x, drag.start.y);
+    if (t && t.type === 'belt') { t.dir = (t.dir + 1) & 3; analyze(); }
+  }
+  drag = null;
+});
+cv.addEventListener('pointercancel', () => { if (pan && pan.moved) setTool(tool); pan = null; drag = null; });
+cv.addEventListener('pointerleave', () => { hover = null; });
+
+document.addEventListener('keydown', e => {
+  if (shareDlg.open) return;
+  if (e.target.closest && e.target.closest('input, select, textarea')) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); setRunning(!running); return; }
+  if (k === 'r') { rotateAction(); return; }
+  if ((k === 'delete' || k === 'backspace') && selected) { erase(selected.x, selected.y); analyze(); return; }
+  const t = TOOLS.find(t => t.key.toLowerCase() === k);
+  if (t) setTool(t.id);
+});
+
+// ---------- loop ----------
+let lastFrame = performance.now(), lastPanel = 0;
+function frame(now) {
+  const real = Math.min(0.1, (now - lastFrame) / 1000);
+  lastFrame = now;
+  if (running) {
+    let simDt = real * speed, steps = 0;
+    while (simDt > 1e-9 && steps < 400) { const d = Math.min(DT, simDt); step(d); simDt -= d; steps++; }
+  }
+  draw();
+  if (now - lastPanel > 250 && (running || dirtyPanels)) { renderPanels(); dirtyPanels = false; lastPanel = now; }
+  requestAnimationFrame(frame);
+}
+
+function onTheme() { readColors(); renderLegend(); }
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+let manualZoom = false;
+new ResizeObserver(() => { if (!manualZoom) autoZoom(); }).observe(scroller);
+
+// expose a tiny hook for automated checks
+window.__planner = { step: (secs) => { for (let t = 0; t < secs; t += DT) step(DT); renderPanels(); }, preset25, preset11, get L() { return L; }, get simT() { return simT; }, perMin, layoutCode, parseCode };
+
+readColors(); renderLegend(); autoZoom();
+// a shared link wins over this viewer's saved layout; with neither, show the 2:5 example
+const fromLink = loadFromLink();
+if (!fromLink && !loadSaved()) preset25();
+setTool('select'); setRot(E); setSpeed(5); setRunning(false);
+if (fromLink) $('hint').innerHTML = 'Loaded the layout from the link. Press <b>Run test</b> to watch it.';
+renderPanels();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
